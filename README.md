@@ -12,7 +12,8 @@ Juego de caza 2D vertical para navegador, construido con Phaser, TypeScript y Vi
 - Mira independiente del dedo: se mueve según el arrastre, no según la posición absoluta.
 - Respiración ON/OFF con barra de aire, fatiga y recuperación lenta.
 - Viento, distancia, retroceso y oscilación de mira.
-- Armería entre niveles.
+- Armería entre niveles con 5 mejoras.
+- Efectos de humo, polvo, plumas, niebla y viento.
 - Puntuación final y rango.
 
 ## Requisitos
