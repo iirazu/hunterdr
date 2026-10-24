@@ -11,10 +11,12 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: 'game',
   width: W,
   height: H,
-  backgroundColor: '#14231e',
+  backgroundColor: '#000000',
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: W,
+    height: H
   },
   input: {
     activePointers: 3
@@ -22,4 +24,24 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [BootScene, MenuScene, HuntScene, ShopScene, ResultScene]
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+const refresh = (): void => {
+  game.scale.refresh();
+  setTimeout(() => game.scale.refresh(), 300);
+};
+window.addEventListener('resize', refresh);
+window.addEventListener('orientationchange', refresh);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', refresh);
+
+window.addEventListener(
+  'pointerup',
+  () => {
+    try {
+      if (game.scale.fullscreen.available && !game.scale.isFullscreen) game.scale.startFullscreen();
+    } catch (e) {
+      // pantalla completa no disponible
+    }
+  },
+  { once: true }
+);
