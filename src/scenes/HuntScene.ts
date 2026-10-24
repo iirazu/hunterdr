@@ -7,6 +7,15 @@ import { WindSystem } from '../systems/WindSystem';
 import { SPECIES } from '../data/species';
 import { LEVELS } from '../data/levels';
 
+interface Upgrades {
+  power: number;
+  scope: number;
+  stability: number;
+  lungs: number;
+  bolt: number;
+  pierce: number;
+}
+
 export class HuntScene extends Phaser.Scene {
   private animals: Animal[] = [];
   private bullets: Bullet[] = [];
@@ -20,9 +29,14 @@ export class HuntScene extends Phaser.Scene {
   private remaining = 90;
   private cool = 0;
   private streak = 0;
+  private upgrades: Upgrades = { power: 0, scope: 0, stability: 0, lungs: 0, bolt: 0, pierce: 0 };
 
   constructor() {
     super('Hunt');
+  }
+
+  init(data: { upgrades?: Upgrades }): void {
+    this.upgrades = data.upgrades ?? { power: 0, scope: 0, stability: 0, lungs: 0, bolt: 0, pierce: 0 };
   }
 
   create(): void {
@@ -44,8 +58,8 @@ export class HuntScene extends Phaser.Scene {
     const species = SPECIES[level.speciesIndex];
 
     this.wind = new WindSystem(level);
-    this.aim = new AimSystem(this, this.wind, () => ({ stability: 0, lungs: 0 }));
-    this.breath = new BreathSystem(this, () => ({ lungs: 0 }));
+    this.aim = new AimSystem(this, this.wind, () => this.upgrades);
+    this.breath = new BreathSystem(this, () => this.upgrades);
 
     for (let i = 0; i < level.animalCount; i++) {
       this.animals.push(new Animal(this, species, i));
@@ -110,7 +124,9 @@ export class HuntScene extends Phaser.Scene {
         kills: this.kills,
         score: this.score,
         ammo: this.ammo,
-        level: this.level
+        level: this.level,
+        money: this.score,
+        upgrades: this.upgrades
       });
     }
   }
@@ -143,7 +159,7 @@ export class HuntScene extends Phaser.Scene {
     }
 
     this.ammo--;
-    this.cool = 1.1;
+    this.cool = Math.max(0.5, 1.1 - this.upgrades.bolt * 0.12);
 
     const bullet = new Bullet(
       this,
@@ -176,14 +192,25 @@ export class HuntScene extends Phaser.Scene {
     }
 
     const zone = target.hitZone(bullet.x, bullet.y);
-    const damage = zone === 'heart' ? 999 : zone === 'head' ? 3 : zone === 'body' ? 1.4 : 0.5;
+    const power = 1 + this.upgrades.power * 0.3;
+    const pierce = 1 + this.upgrades.pierce * 0.15;
+
+    const damage =
+      zone === 'heart'
+        ? 999
+        : zone === 'head'
+          ? 3 * power
+          : zone === 'body'
+            ? 1.4 * power * pierce
+            : 0.5 * power;
 
     target.applyDamage(damage);
 
     if (target.isDead) {
       this.kills++;
       this.streak++;
-      this.score += 150 + Math.round(target.distance) + (zone === 'heart' ? 220 : 0);
+      const streakBonus = Math.min(this.streak - 1, 5) * 25;
+      this.score += 150 + Math.round(target.distance) + (zone === 'heart' ? 220 : 0) + streakBonus;
     } else {
       target.flee();
     }

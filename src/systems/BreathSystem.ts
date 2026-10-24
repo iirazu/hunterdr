@@ -1,3 +1,7 @@
+export interface UpgradeState {
+  lungs: number;
+}
+
 export class BreathSystem {
   public holding = false;
   public exhausted = false;
@@ -5,7 +9,7 @@ export class BreathSystem {
 
   constructor(
     private scene: Phaser.Scene,
-    private getUpgrades: () => { lungs: number }
+    private getUpgrades: () => UpgradeState
   ) {
     this.air = 3 + this.getUpgrades().lungs;
 
