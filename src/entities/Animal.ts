@@ -18,6 +18,7 @@ export class Animal extends Phaser.GameObjects.Container {
   private direction: 1 | -1 = 1;
   private speed: number;
   private waitTime: number;
+  private wounded = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -56,10 +57,16 @@ export class Animal extends Phaser.GameObjects.Container {
       this.waitTime = 1 + Math.random() * 2;
     }
 
-    this.x += this.direction * this.speed * dt;
+    const speedMultiplier = this.wounded ? 2.4 : 1;
+    this.x += this.direction * this.speed * speedMultiplier * dt;
     this.y += Math.sin(this.scene.time.now / 500) * wind * dt;
 
     const bounds = this.scene.scale;
+
+    if (this.wounded && (this.x < -40 || this.x > bounds.width + 40)) {
+      this.isGone = true;
+      return;
+    }
 
     if (this.x < 50 || this.x > bounds.width - 50) {
       this.direction *= -1;
@@ -98,6 +105,7 @@ export class Animal extends Phaser.GameObjects.Container {
   }
 
   public flee(): void {
-    this.speed *= 2;
+    this.wounded = true;
+    this.speed *= 1.6;
   }
 }

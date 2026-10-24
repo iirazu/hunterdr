@@ -51,9 +51,6 @@ export class HuntScene extends Phaser.Scene {
       this.animals.push(new Animal(this, species, i));
     }
 
-    this.input.on('pointermove', pointer => this.aim.updateFromPointer(pointer));
-    this.input.on('pointerdown', pointer => this.aim.updateFromPointer(pointer));
-
     this.createHud();
   }
 

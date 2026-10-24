@@ -15,6 +15,9 @@ export class AimSystem {
   public distance = 120;
 
   private time = 0;
+  private activePointer: number | null = null;
+  private lastPointerX = 0;
+  private lastPointerY = 0;
 
   constructor(
     private scene: Phaser.Scene,
@@ -26,13 +29,37 @@ export class AimSystem {
     this.crosshairX = this.aimX;
     this.crosshairY = this.aimY;
 
-    scene.input.on('pointermove', pointer => this.updateFromPointer(pointer));
-    scene.input.on('pointerdown', pointer => this.updateFromPointer(pointer));
+    scene.input.on('pointerdown', pointer => this.beginDrag(pointer));
+    scene.input.on('pointermove', pointer => this.drag(pointer));
+    scene.input.on('pointerup', pointer => this.endDrag(pointer));
+    scene.input.on('pointerupoutside', pointer => this.endDrag(pointer));
   }
 
-  public updateFromPointer(pointer: Phaser.Input.Pointer): void {
-    this.aimX = Phaser.Math.Clamp(pointer.x, 15, this.scene.scale.width - 15);
-    this.aimY = Phaser.Math.Clamp(pointer.y - 190, 100, this.scene.scale.height - 140);
+  private beginDrag(pointer: Phaser.Input.Pointer): void {
+    this.activePointer = pointer.id;
+    this.lastPointerX = pointer.x;
+    this.lastPointerY = pointer.y;
+  }
+
+  private drag(pointer: Phaser.Input.Pointer): void {
+    if (this.activePointer !== pointer.id) {
+      return;
+    }
+
+    const deltaX = pointer.x - this.lastPointerX;
+    const deltaY = pointer.y - this.lastPointerY;
+
+    this.aimX = Phaser.Math.Clamp(this.aimX + deltaX, 20, this.scene.scale.width - 20);
+    this.aimY = Phaser.Math.Clamp(this.aimY + deltaY, 90, this.scene.scale.height - 150);
+
+    this.lastPointerX = pointer.x;
+    this.lastPointerY = pointer.y;
+  }
+
+  private endDrag(pointer: Phaser.Input.Pointer): void {
+    if (this.activePointer === pointer.id) {
+      this.activePointer = null;
+    }
   }
 
   public update(delta: number, breath: BreathSystem): void {
