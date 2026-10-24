@@ -1,11 +1,16 @@
 export class WindSystem {
   public value: number;
+  private base: number;
+  private t = Math.random() * 10;
 
-  constructor(level: { index: number }) {
-    this.value = level.index >= 3 ? (Math.random() * 2 - 1) * (level.index - 1) * 0.6 : 0;
+  constructor(private maxWind: number) {
+    const sign = Math.random() < 0.5 ? -1 : 1;
+    this.base = sign * maxWind * (0.6 + Math.random() * 0.4);
+    this.value = this.base;
   }
 
-  public update(_delta: number): void {
-    // La intensidad podrá cambiar dinámicamente en niveles futuros.
+  update(dt: number): void {
+    this.t += dt;
+    this.value = this.base + Math.sin(this.t * 0.5) * this.maxWind * 0.25;
   }
 }

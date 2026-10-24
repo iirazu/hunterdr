@@ -1,43 +1,33 @@
-export interface UpgradeState {
-  lungs: number;
-}
+import { Upgrades } from '../state';
+import { airTime } from '../data/upgrades';
 
 export class BreathSystem {
+  public air: number;
   public holding = false;
   public exhausted = false;
-  public air: number;
 
-  constructor(
-    private scene: Phaser.Scene,
-    private getUpgrades: () => UpgradeState
-  ) {
-    this.air = 3 + this.getUpgrades().lungs;
-
-    scene.input.on('pointerdown', () => {
-      if (!this.exhausted) {
-        this.holding = !this.holding;
-      }
-    });
+  constructor(private getUp: () => Upgrades) {
+    this.air = airTime(getUp().lungs);
   }
 
-  public get maximum(): number {
-    return 3 + this.getUpgrades().lungs;
+  get maximum(): number {
+    return airTime(this.getUp().lungs);
   }
 
-  public update(delta: number): void {
-    if (this.holding && !this.exhausted) {
-      this.air = Math.max(0, this.air - delta * 0.55);
+  get active(): boolean {
+    return this.holding && !this.exhausted;
+  }
 
-      if (this.air === 0) {
+  update(dt: number): void {
+    if (this.active) {
+      this.air -= dt;
+      if (this.air <= 0) {
+        this.air = 0;
         this.exhausted = true;
-        this.holding = false;
       }
     } else {
-      this.air = Math.min(this.maximum, this.air + delta * 0.13);
-
-      if (this.exhausted && this.air >= this.maximum * 0.5) {
-        this.exhausted = false;
-      }
+      this.air = Math.min(this.maximum, this.air + dt * 0.8);
+      if (this.exhausted && this.air >= this.maximum * 0.35) this.exhausted = false;
     }
   }
 }

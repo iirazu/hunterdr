@@ -1,8 +1,10 @@
 <!doctype html>
-<html lang="es">
+<html lang='es'>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover' />
+    <meta name='mobile-web-app-capable' content='yes' />
+    <meta name='theme-color' content='#14231e' />
     <title>Wildlands · Caza</title>
     <style>
       html,
@@ -12,15 +14,36 @@
         background: #14231e;
         overflow: hidden;
         touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
       #game {
         width: 100%;
         height: 100%;
       }
+      #rotate {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        background: #14231e;
+        color: #edcf90;
+        font: bold 22px system-ui, sans-serif;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      @media (orientation: portrait) {
+        #rotate {
+          display: flex;
+        }
+      }
     </style>
   </head>
   <body>
-    <div id="game"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <div id='game'></div>
+    <div id='rotate'>Gira el móvil a horizontal para jugar</div>
+    <script type='module' src='/src/main.ts'></script>
   </body>
 </html>

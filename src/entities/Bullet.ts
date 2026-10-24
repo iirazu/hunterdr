@@ -1,27 +1,30 @@
-import Phaser from 'phaser';
+import { Upgrades } from '../state';
 
-export class Bullet extends Phaser.GameObjects.Ellipse {
-  private travelTime: number;
-  private elapsed = 0;
-
+export class Bullet {
   constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    distance: number,
-    wind: number
-  ) {
-    super(scene, x + wind * distance * 0.03, y, 4, 4, 0xfff2c2);
+    public x: number,
+    public y: number,
+    public timeLeft: number
+  ) {}
 
-    this.travelTime = distance / 650;
-    scene.add.existing(this);
+  update(dt: number): void {
+    this.timeLeft -= dt;
   }
 
-  public update(delta: number): void {
-    this.elapsed += delta / 1000;
+  get arrived(): boolean {
+    return this.timeLeft <= 0;
   }
+}
 
-  public hasArrived(): boolean {
-    return this.elapsed >= this.travelTime;
-  }
+export function computeImpact(
+  x: number,
+  y: number,
+  dist: number,
+  wind: number,
+  up: Upgrades
+): { x: number; y: number; time: number } {
+  const drift = wind * dist * 0.008 * (1 - 0.15 * up.wind);
+  const drop = (dist * dist * 0.0002) / (1 + 0.15 * up.power);
+  const time = dist / (650 + 50 * up.power);
+  return { x: x + drift, y: y + drop, time };
 }

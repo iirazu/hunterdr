@@ -1,88 +1,64 @@
 import Phaser from 'phaser';
 import { BreathSystem } from './BreathSystem';
-import { WindSystem } from './WindSystem';
-
-export interface UpgradeState {
-  stability: number;
-  lungs: number;
-}
+import { Upgrades } from '../state';
+import { scopeZoom } from '../data/upgrades';
+import { W, H } from '../config';
 
 export class AimSystem {
-  public aimX: number;
-  public aimY: number;
-  public crosshairX: number;
-  public crosshairY: number;
-  public distance = 120;
+  public aimX = W / 2;
+  public aimY = H * 0.55;
+  public crossX = W / 2;
+  public crossY = H * 0.55;
+  public viewX = W / 2;
+  public viewY = H / 2;
+  public zoom = 1;
+  public scoped = false;
 
-  private time = 0;
-  private activePointer: number | null = null;
-  private lastPointerX = 0;
-  private lastPointerY = 0;
+  private t = 0;
+  private kickX = 0;
+  private kickY = 0;
+  private swayDist = 120;
 
-  constructor(
-    private scene: Phaser.Scene,
-    private wind: WindSystem,
-    private getUpgrades: () => UpgradeState
-  ) {
-    this.aimX = scene.scale.width / 2;
-    this.aimY = scene.scale.height * 0.4;
-    this.crosshairX = this.aimX;
-    this.crosshairY = this.aimY;
-
-    scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.beginDrag(pointer));
-    scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.drag(pointer));
-    scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.endDrag(pointer));
-    scene.input.on('pointerupoutside', (pointer: Phaser.Input.Pointer) => this.endDrag(pointer));
+  setAim(x: number, y: number): void {
+    this.aimX = Phaser.Math.Clamp(x, 40, W - 40);
+    this.aimY = Phaser.Math.Clamp(y, 60, H - 40);
   }
 
-  private beginDrag(pointer: Phaser.Input.Pointer): void {
-    this.activePointer = pointer.id;
-    this.lastPointerX = pointer.x;
-    this.lastPointerY = pointer.y;
+  move(dx: number, dy: number): void {
+    const z = Math.max(this.zoom, 1);
+    this.setAim(this.aimX + dx / z, this.aimY + dy / z);
   }
 
-  private drag(pointer: Phaser.Input.Pointer): void {
-    if (this.activePointer !== pointer.id) {
-      return;
-    }
-
-    const deltaX = pointer.x - this.lastPointerX;
-    const deltaY = pointer.y - this.lastPointerY;
-
-    this.aimX = Phaser.Math.Clamp(this.aimX + deltaX, 20, this.scene.scale.width - 20);
-    this.aimY = Phaser.Math.Clamp(this.aimY + deltaY, 90, this.scene.scale.height - 150);
-
-    this.lastPointerX = pointer.x;
-    this.lastPointerY = pointer.y;
+  kick(): void {
+    this.kickY -= 46;
+    this.kickX += Phaser.Math.FloatBetween(-18, 18);
   }
 
-  private endDrag(pointer: Phaser.Input.Pointer): void {
-    if (this.activePointer === pointer.id) {
-      this.activePointer = null;
-    }
-  }
+  update(dt: number, breath: BreathSystem, targetDist: number, up: Upgrades): void {
+    this.t += dt;
+    const maxZoom = scopeZoom(up.scope);
+    const goal = this.scoped ? maxZoom : 1;
+    this.zoom += (goal - this.zoom) * Math.min(1, dt * 10);
+    this.swayDist += (targetDist - this.swayDist) * Math.min(1, dt * 4);
 
-  public update(delta: number, breath: BreathSystem): void {
-    this.time += delta;
+    let amp = (2.5 + this.swayDist * 0.11) * Math.max(0.35, 1 - 0.12 * up.stability);
+    if (breath.exhausted) amp *= 2.2;
+    else if (breath.active) amp *= 0.2;
 
-    const upgrades = this.getUpgrades();
-    const baseAmplitude = 2 + this.distance / 42;
-    const stabilityFactor = 1 - upgrades.stability * 0.13;
+    const t = this.t;
+    const sx = (Math.sin(t * 1.6) + 0.35 * Math.sin(t * 3.1 + 1) + 0.2 * Math.sin(t * 7.3)) * amp;
+    const sy = (Math.cos(t * 1.3) + 0.3 * Math.sin(t * 3.2) + 0.2 * Math.cos(t * 6.1)) * amp * 0.8;
 
-    let amplitude = baseAmplitude * stabilityFactor;
+    const decay = Math.exp(-dt * 5);
+    this.kickX *= decay;
+    this.kickY *= decay;
 
-    if (breath.holding && !breath.exhausted) {
-      amplitude *= 0.18;
-    } else if (breath.exhausted) {
-      amplitude *= 2.6;
-    }
+    const z = Math.max(this.zoom, 1);
+    this.crossX = this.aimX + (sx + this.kickX) / z;
+    this.crossY = this.aimY + (sy + this.kickY) / z;
 
-    this.crosshairX =
-      this.aimX +
-      (Math.sin(this.time * 1.6) + 0.35 * Math.sin(this.time * 3.1)) * amplitude;
-
-    this.crosshairY =
-      this.aimY +
-      (Math.cos(this.time * 1.3) + 0.3 * Math.sin(this.time * 3.2)) * amplitude;
+    const k = Phaser.Math.Clamp((this.zoom - 1) / (maxZoom - 1), 0, 1);
+    this.viewX = W / 2 + (this.crossX - W / 2) * k;
+    this.viewY = H / 2 + (this.crossY - H / 2) * k;
   }
 }

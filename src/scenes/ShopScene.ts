@@ -1,104 +1,53 @@
 import Phaser from 'phaser';
-
-interface Upgrade {
-  id: keyof Upgrades;
-  name: string;
-  description: string;
-  baseCost: number;
-}
-
-interface Upgrades {
-  power: number;
-  scope: number;
-  stability: number;
-  lungs: number;
-  bolt: number;
-  pierce: number;
-}
+import { W, H, FONT, NL } from '../config';
+import { state, MAX_UPGRADE } from '../state';
+import { UPGRADE_DEFS, upgradeCost } from '../data/upgrades';
+import { LEVELS } from '../data/levels';
+import { SPECIES } from '../data/species';
+import { makeButton } from '../ui';
 
 export class ShopScene extends Phaser.Scene {
-  private money = 0;
-  private upgrades: Upgrades = { power: 0, scope: 0, stability: 0, lungs: 0, bolt: 0, pierce: 0 };
-
   constructor() {
     super('Shop');
   }
 
-  init(data: { money?: number; upgrades?: Upgrades }): void {
-    this.money = data.money ?? 0;
-    this.upgrades = data.upgrades ?? { power: 0, scope: 0, stability: 0, lungs: 0, bolt: 0, pierce: 0 };
-  }
-
   create(): void {
-    const { width, height } = this.scale;
+    this.add.rectangle(W / 2, H / 2, W, H, 0x14231e);
+    this.add.text(W / 2, 44, 'ARMERÍA', { fontFamily: FONT, fontSize: '42px', color: '#edcf90', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(W / 2, 92, `Saldo: $${state.money}`, { fontFamily: FONT, fontSize: '28px', color: '#7CFC8A' }).setOrigin(0.5);
 
-    this.add
-      .text(width / 2, height * 0.15, 'ARMERÍA', {
-        fontFamily: 'monospace',
-        fontSize: '34px',
-        color: '#edcf90'
-      })
-      .setOrigin(0.5);
+    UPGRADE_DEFS.forEach((def, i) => {
+      const lv = state.upgrades[def.id];
+      const maxed = lv >= MAX_UPGRADE;
+      const cost = upgradeCost(def, lv);
+      const can = !maxed && state.money >= cost;
+      const x = W / 2 + (i % 2 === 0 ? -310 : 310);
+      const y = 215 + Math.floor(i / 2) * 140;
 
-    this.add
-      .text(width / 2, height * 0.2, `Saldo: $${this.money}`, {
-        fontFamily: 'monospace',
-        fontSize: '22px',
-        color: '#7CFC8A'
-      })
-      .setOrigin(0.5);
-
-    const catalog: Upgrade[] = [
-      { id: 'power', name: 'Potencia', description: '+30% daño', baseCost: 180 },
-      { id: 'scope', name: 'Mira', description: 'Más aumentos', baseCost: 130 },
-      { id: 'stability', name: 'Estabilidad', description: 'Menos oscilación', baseCost: 160 },
-      { id: 'lungs', name: 'Respiración', description: 'Más aire', baseCost: 110 },
-      { id: 'bolt', name: 'Cerrojo', description: 'Recarga más rápida', baseCost: 140 },
-      { id: 'pierce', name: 'Perforante', description: 'Más daño al cuerpo', baseCost: 200 }
-    ];
-
-    catalog.forEach((item, index) => {
-      const level = this.upgrades[item.id];
-      const cost = Math.round(item.baseCost * (1 + level * 0.8));
-      const y = height * 0.3 + index * 80;
-
-      this.add
-        .text(width / 2, y, `${item.name} · Nivel ${level}/5\n${item.description} · $${cost}`, {
-          fontFamily: 'monospace',
-          fontSize: '16px',
-          color: '#ffffff',
-          align: 'center',
-          backgroundColor: '#22352b',
-          padding: { x: 14, y: 10 }
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.buy(item.id, item.baseCost));
+      const card = this.add.rectangle(x, y, 580, 124, can ? 0x2b4a36 : 0x22352b).setStrokeStyle(2, can ? 0x7CFC8A : 0x55665b, 0.9);
+      const next = maxed ? 'MÁXIMO' : `Siguiente: ${def.effect(lv + 1)}`;
+      const text = [`${def.name} · Nivel ${lv}/${MAX_UPGRADE}`, `Ahora: ${def.effect(lv)}`, next, maxed ? '' : `Precio: $${cost}`].join(NL);
+      this.add.text(x - 270, y, text, { fontFamily: FONT, fontSize: '17px', color: '#ffffff', lineSpacing: 3 }).setOrigin(0, 0.5);
+      if (can) {
+        card.setInteractive({ useHandCursor: true });
+        card.on('pointerdown', () => {
+          state.money -= cost;
+          state.upgrades[def.id] = lv + 1;
+          state.save();
+          this.scene.restart();
+        });
+      }
     });
 
+    const lvl = LEVELS[Math.min(state.level, LEVELS.length - 1)];
+    const sp = SPECIES[lvl.speciesIndex];
     this.add
-      .text(width / 2, height * 0.9, 'CONTINUAR', {
-        fontFamily: 'monospace',
-        fontSize: '24px',
-        color: '#ffffff',
-        backgroundColor: '#526b3d',
-        padding: { x: 22, y: 12 }
+      .text(W / 2, 560, `Siguiente: nivel ${state.level + 1} · ${lvl.name} · ${sp.name} (${sp.isBird ? 'ave' : 'terrestre'})`, {
+        fontFamily: FONT,
+        fontSize: '22px',
+        color: '#cfe3d2'
       })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.start('Hunt', { upgrades: this.upgrades }));
-  }
-
-  private buy(id: keyof Upgrades, baseCost: number): void {
-    const level = this.upgrades[id];
-    const cost = Math.round(baseCost * (1 + level * 0.8));
-
-    if (level >= 5 || this.money < cost) {
-      return;
-    }
-
-    this.money -= cost;
-    this.upgrades[id]++;
-    this.scene.restart({ money: this.money, upgrades: this.upgrades });
+      .setOrigin(0.5);
+    makeButton(this, W / 2, 640, 420, 76, `EMPEZAR NIVEL ${state.level + 1}`, 0x526b3d, () => this.scene.start('Hunt'));
   }
 }
