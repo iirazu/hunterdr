@@ -29,10 +29,10 @@ export class AimSystem {
     this.crosshairX = this.aimX;
     this.crosshairY = this.aimY;
 
-    scene.input.on('pointerdown', pointer => this.beginDrag(pointer));
-    scene.input.on('pointermove', pointer => this.drag(pointer));
-    scene.input.on('pointerup', pointer => this.endDrag(pointer));
-    scene.input.on('pointerupoutside', pointer => this.endDrag(pointer));
+    scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.beginDrag(pointer));
+    scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.drag(pointer));
+    scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.endDrag(pointer));
+    scene.input.on('pointerupoutside', (pointer: Phaser.Input.Pointer) => this.endDrag(pointer));
   }
 
   private beginDrag(pointer: Phaser.Input.Pointer): void {

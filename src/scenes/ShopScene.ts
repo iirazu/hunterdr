@@ -5,7 +5,6 @@ interface Upgrade {
   name: string;
   description: string;
   baseCost: number;
-  level: number;
 }
 
 interface Upgrades {
@@ -49,7 +48,7 @@ export class ShopScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const catalog = [
+    const catalog: Upgrade[] = [
       { id: 'power', name: 'Potencia', description: '+30% daño', baseCost: 180 },
       { id: 'scope', name: 'Mira', description: 'Más aumentos', baseCost: 130 },
       { id: 'stability', name: 'Estabilidad', description: 'Menos oscilación', baseCost: 160 },
