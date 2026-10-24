@@ -6,26 +6,35 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.add.text(210, 300, 'WILDLANDS', {
-      fontFamily: 'system-ui',
-      fontSize: '42px',
-      color: '#edcf90'
-    }).setOrigin(0.5);
+    const { width, height } = this.scale;
 
-    this.add.text(210, 370, 'Caza en 10 niveles', {
-      fontFamily: 'system-ui',
-      fontSize: '20px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
+    this.add
+      .text(width / 2, height * 0.32, 'WILDLANDS', {
+        fontFamily: 'monospace',
+        fontSize: '42px',
+        color: '#edcf90'
+      })
+      .setOrigin(0.5);
 
-    const button = this.add.text(210, 480, 'COMENZAR', {
-      fontFamily: 'system-ui',
-      fontSize: '24px',
-      color: '#ffffff',
-      backgroundColor: '#526b3d',
-      padding: { x: 28, y: 14 }
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    this.add
+      .text(width / 2, height * 0.43, 'Caza móvil vertical', {
+        fontFamily: 'monospace',
+        fontSize: '18px',
+        color: '#d9e6d4'
+      })
+      .setOrigin(0.5);
 
-    button.on('pointerdown', () => this.scene.start('Hunt'));
+    const start = this.add
+      .text(width / 2, height * 0.58, 'COMENZAR', {
+        fontFamily: 'monospace',
+        fontSize: '26px',
+        color: '#ffffff',
+        backgroundColor: '#526b3d',
+        padding: { x: 24, y: 14 }
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    start.on('pointerdown', () => this.scene.start('Hunt'));
   }
 }

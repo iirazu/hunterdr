@@ -5,19 +5,24 @@ import { HuntScene } from './scenes/HuntScene';
 import { ShopScene } from './scenes/ShopScene';
 import { ResultScene } from './scenes/ResultScene';
 
-new Phaser.Game({
+const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game',
-  width: 420,
-  height: 800,
   backgroundColor: '#14231e',
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  input: {
+    activePointers: 3
   },
   physics: {
     default: 'arcade',
-    arcade: { gravity: { x: 0, y: 0 } }
+    arcade: {
+      gravity: { x: 0, y: 0 }
+    }
   },
   scene: [BootScene, MenuScene, HuntScene, ShopScene, ResultScene]
-});
+};
+
+new Phaser.Game(config);

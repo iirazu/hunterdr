@@ -1,37 +1,39 @@
 export class BreathSystem {
-  public air = 3;
-  public maxAir = 3;
-  public active = false;
+  public holding = false;
   public exhausted = false;
+  public air: number;
 
-  constructor() {}
+  constructor(
+    private scene: Phaser.Scene,
+    private getUpgrades: () => { lungs: number }
+  ) {
+    this.air = 3 + this.getUpgrades().lungs;
 
-  public toggle(): void {
-    if (this.exhausted) return;
-    this.active = !this.active;
+    scene.input.on('pointerdown', () => {
+      if (!this.exhausted) {
+        this.holding = !this.holding;
+      }
+    });
+  }
+
+  public get maximum(): number {
+    return 3 + this.getUpgrades().lungs;
   }
 
   public update(delta: number): void {
-    const dt = delta / 1000;
+    if (this.holding && !this.exhausted) {
+      this.air = Math.max(0, this.air - delta * 0.55);
 
-    if (this.active && !this.exhausted) {
-      this.air -= dt * 0.55;
-
-      if (this.air <= 0) {
-        this.air = 0;
+      if (this.air === 0) {
         this.exhausted = true;
-        this.active = false;
+        this.holding = false;
       }
     } else {
-      this.air = Math.min(this.maxAir, this.air + dt * 0.13);
+      this.air = Math.min(this.maximum, this.air + delta * 0.13);
 
-      if (this.exhausted && this.air >= this.maxAir * 0.5) {
+      if (this.exhausted && this.air >= this.maximum * 0.5) {
         this.exhausted = false;
       }
     }
-  }
-
-  public isStable(): boolean {
-    return this.active && !this.exhausted;
   }
 }

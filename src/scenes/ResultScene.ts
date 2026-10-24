@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 interface ResultData {
   kills: number;
   score: number;
+  ammo: number;
   level: number;
 }
 
@@ -12,16 +13,40 @@ export class ResultScene extends Phaser.Scene {
   }
 
   create(data: ResultData): void {
-    this.add.text(210, 320, 'RESULTADO', {
-      fontFamily: 'system-ui',
-      fontSize: '36px',
-      color: '#edcf90'
-    }).setOrigin(0.5);
+    const { width, height } = this.scale;
 
-    this.add.text(210, 400, `Abatidos: ${data.kills}\nPuntos: ${data.score}`, {
-      fontFamily: 'system-ui',
-      fontSize: '22px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
+    this.add
+      .text(width / 2, height * 0.35, 'RESULTADO', {
+        fontFamily: 'monospace',
+        fontSize: '34px',
+        color: '#edcf90'
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(
+        width / 2,
+        height * 0.5,
+        `Abatidos: ${data.kills}\nPuntos: ${data.score}\nMunición restante: ${data.ammo}`,
+        {
+          fontFamily: 'monospace',
+          fontSize: '20px',
+          color: '#ffffff',
+          align: 'center'
+        }
+      )
+      .setOrigin(0.5);
+
+    this.add
+      .text(width / 2, height * 0.68, 'VOLVER AL MENÚ', {
+        fontFamily: 'monospace',
+        fontSize: '22px',
+        color: '#ffffff',
+        backgroundColor: '#526b3d',
+        padding: { x: 20, y: 12 }
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.start('Menu'));
   }
 }

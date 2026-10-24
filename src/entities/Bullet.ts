@@ -1,19 +1,27 @@
 import Phaser from 'phaser';
 
-export class Bullet extends Phaser.GameObjects.Arc {
-  private life = 1;
+export class Bullet extends Phaser.GameObjects.Ellipse {
+  private travelTime: number;
+  private elapsed = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, windOffset: number) {
-    super(scene, x, y, 3, 16, 1, 0xfff2c4);
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    distance: number,
+    wind: number
+  ) {
+    super(scene, x + wind * distance * 0.03, y, 4, 4, 0xfff2c2);
 
+    this.travelTime = distance / 650;
     scene.add.existing(this);
   }
 
   public update(delta: number): void {
-    this.life -= delta / 1000;
+    this.elapsed += delta / 1000;
   }
 
-  public isExpired(): boolean {
-    return this.life <= 0;
+  public hasArrived(): boolean {
+    return this.elapsed >= this.travelTime;
   }
 }

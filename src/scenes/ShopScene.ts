@@ -6,16 +6,34 @@ export class ShopScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.add.text(210, 300, 'ARMERÍA', {
-      fontFamily: 'system-ui',
-      fontSize: '36px',
-      color: '#edcf90'
-    }).setOrigin(0.5);
+    const { width, height } = this.scale;
 
-    this.add.text(210, 400, 'Mejoras entre niveles', {
-      fontFamily: 'system-ui',
-      fontSize: '20px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
+    this.add
+      .text(width / 2, height * 0.35, 'ARMERÍA', {
+        fontFamily: 'monospace',
+        fontSize: '34px',
+        color: '#edcf90'
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(width / 2, height * 0.5, 'Mejoras disponibles próximamente', {
+        fontFamily: 'monospace',
+        fontSize: '18px',
+        color: '#ffffff'
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(width / 2, height * 0.65, 'CONTINUAR', {
+        fontFamily: 'monospace',
+        fontSize: '24px',
+        color: '#ffffff',
+        backgroundColor: '#526b3d',
+        padding: { x: 22, y: 12 }
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.start('Result'));
   }
 }
